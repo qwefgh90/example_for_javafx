@@ -1,0 +1,77 @@
+<div class="common-layout header-layout container" >
+	<!-- search input  -->
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="input-group">
+				<input class="form-control" type="search" focus-me="false" placeholder="Java C++" ng-model="searchModel.searchKeyword" ng-keydown="$event.which === 13 && search(searchModel.searchKeyword)" > 
+				<span class="input-group-btn">
+					<button type="button" class="btn btn-default" ng-click="isCollapsed = !isCollapsed">
+					<span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+					</button>
+					<input class="btn btn-default searchbt " value="Search"
+					type="submit" ng-click="search(searchModel.searchKeyword)">
+				</span>
+			</div>
+		</div>
+	</div>
+	<!-- summary  -->
+	<div class="row">
+		<div class="col-xs-12" style="padding-top: 5px; padding-bottom: 5px">
+		
+			<p ng-show="searchModel.searchFlag == true">
+				<img alt="Look for documents..." src="/app/image/progress.gif">
+			</p>
+
+			<div uib-collapse="isCollapsed">
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<label>Search mode(applied to content) </label><br>
+						<div class="btn-group">
+					        <label class="btn btn-success" ng-model="optionModel.option.keywordMode" ng-click="updateOption()" uib-btn-radio="'OR'">Or</label>
+					        <label class="btn btn-success" ng-model="optionModel.option.keywordMode" ng-click="updateOption()"uib-btn-radio="'AND'">And</label>
+					    </div>
+					</div>
+				</div>
+			</div>
+			<p
+				ng-show="searchModel.searchFlag == false && searchModel.searchTryCount > 0">
+				About <b>{{searchModel.searchResult.length}}</b> results (<b>{{searchModel.searchTime}}</b>
+				secs), order of documents to contain more keywords.
+			</p>
+			
+			<!-- 
+			<div>
+				<button type="button" class="btn btn-default btn-sm" aria-label="Left Align">
+					<span class="glyphicon glyphicon-save" style="" aria-hidden="true"></span>Download
+				</button>
+			</div>-->
+		</div>
+	</div>
+
+	<!-- result  -->
+	<div class="row">
+		
+		<div class="col-xs-12 content-wrapper-outer">
+			<div class="content-wrapper container-fluid" ng-repeat="object in searchModel.searchResult">
+				
+				<span class="col-xs-12" style="padding-left:0px;"><a class="title" href ng-click='openFile(object.pathString)'>{{object.title}}</a><small ng-show="object.exist == false"> (lost file)</small>
+				</span>
+				<span class="col-xs-12" style="padding-left:0px;"> <a class="url text-warning" style="padding-left: 0px;" href ng-click='open(object.parentPathString)'>{{object.parentPathString}}</a>
+				</span>
+				
+				<div class="col-xs-12 description " style="padding-left:0px;">
+					<b>
+					<small ng-if="object.fileSize < 1000"> {{object.fileSize}} bytes,</small>
+					<small ng-if="object.fileSize >= 1000 && object.fileSize < 1000000">{{object.fileSize / 1000.0 | number:3}} KB,</small>
+					<small ng-if="object.fileSize >= 1000000">{{object.fileSize / 1000000.0 | number:3}} MB,</small></b>
+					<small>{{object.modifiedTime | date:'yyyy-MM-dd HH:mm:ss'}},</small>
+					<small>{{object.mimeType}}</small>
+					<p style="text-overflow: ellipsis;" style="max-height:5.1em;line-height:2em" ng-bind-html="object.contents">
+					</p>
+				</div>
+				
+			</div>
+		</div>
+		
+	</div>
+</div>
