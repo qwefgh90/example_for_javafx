@@ -1,7 +1,6 @@
-package io.github.qwefgh90.handyfinder.gui;
+package io.github.qwefgh90.example.gui;
 
-import static io.github.qwefgh90.handyfinder.gui.Java2JavascriptUtils.connectBackendObject;
-import io.github.qwefgh90.handyfinder.exception.TomcatInitFailException;
+import static io.github.qwefgh90.example.gui.Java2JavascriptUtils.connectBackendObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +41,6 @@ import org.apache.tomcat.JarScanType;
 import org.apache.tomcat.JarScannerCallback;
 import org.apache.tomcat.util.scan.StandardJarScanFilter;
 import org.apache.tomcat.util.scan.StandardJarScanner;
-import org.codehaus.plexus.util.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -51,55 +49,38 @@ import org.w3c.dom.Element;
 public class GUIApplication extends Application {
 	private final static Logger LOG = LoggerFactory
 			.getLogger(GUIApplication.class);
+
+	private final double WINDOW_LOADING_WIDTH = 300;
+	private final double WINDOW_LOADING_HEIGHT = 330;
+	private final Tomcat tomcat = new Tomcat();
 	
-	private final static GUIApplication app = new GUIApplication();
+	private WebView currentView;
+	private Stage primaryStage;
 	
 	public void start(String[] args){
 		launch(args);
 	}
-	public static GUIApplication getSingleton() {
-		return app;
-	}
-	
-	private final double WINDOW_LOADING_WIDTH = 300;
-	private final double WINDOW_LOADING_HEIGHT = 330;
-	
-	private WebView currentView = null;
-	private Tomcat tomcat;
-	private Stage primaryStage;
-	
-	private boolean stopped = false;
-	public boolean isStop(){ return stopped; }
-
-	private ExecutorService webAppThread = Executors.newSingleThreadExecutor();
-	public ExecutorService getWebAppThread() { return webAppThread;}
-
 
 	@Override
 	public void start(Stage primaryStage) throws ServletException, LifecycleException {
-
 		this.primaryStage = primaryStage;
-		LOG.info("Handyfinder is Loading");
-
-
-		Tomcat tomcat = new Tomcat();
-		GUIApplication.this.tomcat = tomcat;
+		LOG.info("JavaFX Application is Loading");
 		tomcat.getConnector().setAttribute("address",
-				AppStartupConfig.address);
+				AppStartup.address);
 		tomcat.getConnector().setAttribute("port",
-				AppStartupConfig.port);
+				AppStartup.port);
 
-		Context context = tomcat.addWebapp("",
-				AppStartupConfig.pathForAppdata.toAbsolutePath()
+		final Context context = tomcat.addWebapp("",
+				AppStartup.pathForAppdata.toAbsolutePath()
 				.toString());
 		// https://tomcat.apache.org/tomcat-7.0-doc/api/org/apache/catalina/startup/Tomcat.html#addWebapp(org.apache.catalina.Host,%20java.lang.String,%20java.lang.String)
 
 		context.setJarScanner(new FastJarScanner());
-		context.addWelcomeFile(AppStartupConfig.PAGE);
+		context.addWelcomeFile(AppStartup.PAGE);
 		tomcat.init();
 		tomcat.start();
 		primaryStage.show();
-		initializeWebviewWhenComplete();
+		currentView = initializeWebviewWhenComplete();
 	}
 	
 
@@ -110,31 +91,11 @@ public class GUIApplication extends Application {
 	
 	@Override
 	public void stop() throws Exception {
-		final Callable<Boolean> doServerStop = () -> {
-			try {
-				LOG.info("try stop tomcat");
-				tomcat.stop();
-				LOG.info("stopped tomcat");
-			} catch (Exception e) {
-				LOG.error(ExceptionUtils.getStackTrace(e));
-				return false;
-			}
-			return true;
-		};
-		
-		doServerStop.call();
+		LOG.info("try stop tomcat");
+		tomcat.stop();
+		LOG.info("stopped tomcat");
 		super.stop();
 		LOG.info("javafx stop()");
-	}
-
-	private void showUI(Supplier<WebView> run) {
-		if (this.primaryStage == null){
-			LOG.warn("Javafx startup is not nomally initialized");
-			return;
-		}
-		currentView = run.get();
-		if (!AppStartupConfig.getServerOnlyMode())
-			primaryStage.show();
 	}
 
 	private WebView initializeWebviewWhenComplete() {
@@ -143,31 +104,18 @@ public class GUIApplication extends Application {
 		webView.getEngine().setOnAlert(new EventHandler<WebEvent<String>>() {
 			@Override
 			public void handle(WebEvent<String> arg0) {
-				System.err.println("alertwb1: " + arg0.getData());
+				System.err.println("alert: " + arg0.getData());
 			}
 		});
 
 		// load index.html
 		// webView.getEngine().load(getClass().getResource(page).toExternalForm());
-		webView.getEngine().load(AppStartupConfig.homeUrl + AppStartupConfig.PAGE);
-		webView.getEngine().documentProperty()
-				.addListener(new ChangeListener<Document>() {
-					@Override
-					public void changed(
-							ObservableValue<? extends Document> prop,
-							Document oldDoc, Document newDoc) {
-						connectBackendObject(webView.getEngine(), "guiService",
-								new GUIService(), true);
-					}
-				});
+		webView.getEngine().load(AppStartup.homeUrl + AppStartup.PAGE);
 
 		primaryStage.setScene(new Scene(webView));
 		primaryStage.setTitle("Example");
 
-		Preferences userPrefs = Preferences
-				.userNodeForPackage(AppStartupConfig.class);
-
-		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+		final Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
 		final double WINDOW_DEFAULT_X;
 		final double WINDOW_DEFAULT_Y;
@@ -178,9 +126,10 @@ public class GUIApplication extends Application {
 		WINDOW_DEFAULT_WIDTH = primaryScreenBounds.getWidth()/2 < 520 ? primaryScreenBounds.getWidth() : 520;
 		WINDOW_DEFAULT_Y = primaryScreenBounds.getHeight() / 4;
 		WINDOW_DEFAULT_HEIGHT = WINDOW_DEFAULT_WIDTH;
-		 
-		double x = userPrefs.getDouble("stage.x", WINDOW_DEFAULT_X);
-		double y = userPrefs.getDouble("stage.y", WINDOW_DEFAULT_Y);
+
+		final Preferences userPrefs = Preferences
+				.userNodeForPackage(AppStartup.class);
+
 		double w = userPrefs.getDouble("stage.width", WINDOW_DEFAULT_WIDTH);
 		double h = userPrefs.getDouble("stage.height", WINDOW_DEFAULT_HEIGHT);
 		if(w <= WINDOW_LOADING_WIDTH)
@@ -188,12 +137,12 @@ public class GUIApplication extends Application {
 		if(h <= WINDOW_LOADING_HEIGHT)
 			h = WINDOW_DEFAULT_HEIGHT;
 		
-		primaryStage.setX(x);
-		primaryStage.setY(y);
+		primaryStage.setX(userPrefs.getDouble("stage.x", WINDOW_DEFAULT_X));
+		primaryStage.setY(userPrefs.getDouble("stage.y", WINDOW_DEFAULT_Y));
 		primaryStage.setWidth(w);
 		primaryStage.setHeight(h);
 
-		LOG.info("Handyfinder is ready : " + AppStartupConfig.homeUrl);
+		LOG.info("Sample is ready : " + AppStartup.homeUrl);
 		return webView;
 	}
 	
@@ -207,7 +156,7 @@ public class GUIApplication extends Application {
 		@Override
 		public void scan(JarScanType scanType, ServletContext context,
 				JarScannerCallback callback) {
-			StandardJarScanFilter filter = new StandardJarScanFilter();
+			final StandardJarScanFilter filter = new StandardJarScanFilter();
 			filter.setDefaultTldScan(false);
 			filter.setPluggabilitySkip("*.jar");
 			filter.setPluggabilityScan("*handyfinder*");
@@ -218,7 +167,7 @@ public class GUIApplication extends Application {
 
 		@Override
 		public void setJarScanFilter(JarScanFilter jarScanFilter) {
-			super.setJarScanFilter(jarScanFilter);
+		 	super.setJarScanFilter(jarScanFilter);
 		}
 	}
 }

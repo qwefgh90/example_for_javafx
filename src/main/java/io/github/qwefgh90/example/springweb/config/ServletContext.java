@@ -1,4 +1,4 @@
-package io.github.qwefgh90.handyfinder.springweb.config;
+package io.github.qwefgh90.example.springweb.config;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 @EnableWebMvc
-@ComponentScan(basePackages = {"io.github.qwefgh90.handyfinder.springweb.config","io.github.qwefgh90.handyfinder.springweb.controller"})
+@ComponentScan(basePackages = {"io.github.qwefgh90.example.springweb.config","io.github.qwefgh90.example.springweb.controller"})
 public class ServletContext extends WebMvcConfigurerAdapter {
 
 	private final static Logger LOG = LoggerFactory.getLogger(ServletContext.class);

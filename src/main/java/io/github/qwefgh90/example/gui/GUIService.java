@@ -1,4 +1,4 @@
-package io.github.qwefgh90.handyfinder.gui;
+package io.github.qwefgh90.example.gui;
 
 import java.io.File;
 

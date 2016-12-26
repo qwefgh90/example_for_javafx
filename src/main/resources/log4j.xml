@@ -4,7 +4,7 @@
 
 	<!-- Appenders -->
 	<appender name="FILE_APPENDER" class="org.apache.log4j.FileAppender">
-		<param name="file" value="log.out" />
+		<param name="file" value="log.txt" />
 		<param name="immediateFlush" value="true" />
 		<param name="append" value="true" />
 		<layout class="org.apache.log4j.PatternLayout">
@@ -19,22 +19,7 @@
 		</layout>
 	</appender>
 
-	<logger name="org.springframework.messaging">
-		<level value="warn" />
-	</logger>
-	<logger name="org.springframework.web">
-		<level value="warn" />
-	</logger>
-	<logger name="io.github.qwefgh90.handyfinder.gui">
-		<level value="debug" />
-	</logger>
-	<logger name="io.github.qwefgh90.springweb.service">
-		<level value="debug" />
-	</logger>
-	<logger name="io.github.qwefgh90.handyfinder.lucene">
-		<level value="trace" />
-	</logger>
-	<logger name="io.github.qwefgh90.handyfinder.springweb.websocket.test">
+	<logger name="io.github.qwefgh90.example.gui">
 		<level value="debug" />
 	</logger>
 	<root>
